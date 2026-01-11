@@ -1,0 +1,55 @@
+# -----------------------------
+# Go build artifacts
+# -----------------------------
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Coverage output
+*.out
+
+# Build output directories
+_build/
+bin/
+version/version.go
+
+# -----------------------------
+# Dependency management
+# -----------------------------
+# Glide
+.glide/
+# Uncomment if using Go modules but want to ignore vendored packages
+# vendor/
+
+# -----------------------------
+# Environment / config files
+# -----------------------------
+.env
+.env.local
+
+# -----------------------------
+# IDE / editor specific
+# -----------------------------
+# macOS
+.DS_Store
+
+# Editors
+.idea/
+*.iml
+.vscode/
+
+# Profiles
+profile
+
+# -----------------------------
+# Logs / temporary files
+# -----------------------------
+*.log
+*.tmp
+*.swp
