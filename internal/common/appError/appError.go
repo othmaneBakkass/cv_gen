@@ -20,6 +20,7 @@ type ErrorCode string
 
 const (
 	ErrorCodeUnknown ErrorCode = "unknown_error"
+	ErrorCodeArgs    ErrorCode = "args_error"
 )
 
 type AppError struct {

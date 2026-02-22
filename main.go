@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/othmaneBakkass/cv_gen/cmd/cv_gen/root"
-	_ "github.com/othmaneBakkass/cv_gen/cmd/cv_gen/shell"
+	_ "github.com/othmaneBakkass/cv_gen/cmd/generate"
+	"github.com/othmaneBakkass/cv_gen/cmd/root"
 	apperror "github.com/othmaneBakkass/cv_gen/internal/common/appError"
 )
 
@@ -20,7 +20,7 @@ func main() {
 			}
 			os.Exit(1)
 		} else {
-			fmt.Fprintln(os.Stderr, "Unexpected error:", err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(2)
 		}
 	}
