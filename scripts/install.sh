@@ -14,44 +14,43 @@ BIN_NAME="cv_gen"
 # =========================
 
 OS=$(uname | tr '[:upper:]' '[:lower:]')
-ARCH=$(uname -m)
-
-# Normalize architecture
-if [ "$ARCH" = "x86_64" ]; then
-    ARCH="amd64"
-elif [[ "$ARCH" == arm* ]]; then
-    ARCH="arm64"
-fi
 
 # =========================
-# Determine Installation Directory
+# Determine binary name for download
 # =========================
 
-if [[ "$OS" == "linux" || "$OS" == "darwin" ]]; then
+if [[ "$OS" == "linux" ]]; then
+    BIN_DOWNLOAD_NAME="cv_gen"
+    BIN_DIR="/usr/local/bin"
+    if [ ! -w "$BIN_DIR" ]; then
+        echo "Warning: You may need to run this script with sudo to install in $BIN_DIR"
+    fi
+elif [[ "$OS" == "darwin" ]]; then
+    BIN_DOWNLOAD_NAME="cv_gen_darwin"
     BIN_DIR="/usr/local/bin"
     if [ ! -w "$BIN_DIR" ]; then
         echo "Warning: You may need to run this script with sudo to install in $BIN_DIR"
     fi
 elif [[ "$OS" == "windows" ]]; then
+    BIN_DOWNLOAD_NAME="cv_gen.exe"
     BIN_DIR="$HOME/bin"
     mkdir -p "$BIN_DIR"
-    BIN_NAME="cv_gen.exe"
 else
     echo "Unsupported OS: $OS"
     exit 1
 fi
 
 # =========================
-# Download Binary
+# Download binary
 # =========================
 
-URL="https://github.com/$REPO/releases/download/$VERSION/$BIN_NAME-$OS-$ARCH"
+URL="https://github.com/$REPO/releases/download/$VERSION/$BIN_DOWNLOAD_NAME"
 
 echo "Downloading $URL..."
 curl -sSL -o "$BIN_DIR/$BIN_NAME" "$URL"
 
 # =========================
-# Make Executable (Linux/macOS)
+# Make executable (Linux/macOS)
 # =========================
 
 if [[ "$OS" != "windows" ]]; then
