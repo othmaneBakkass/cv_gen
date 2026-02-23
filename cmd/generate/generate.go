@@ -2,11 +2,13 @@ package generate
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
 	"github.com/othmaneBakkass/cv_gen/cmd/root"
 	apperror "github.com/othmaneBakkass/cv_gen/internal/common/appError"
+	"github.com/othmaneBakkass/cv_gen/internal/common/logs"
 	"github.com/othmaneBakkass/cv_gen/internal/fsc"
 	tone "github.com/othmaneBakkass/cv_gen/internal/pdf/templates/t1"
 	"github.com/spf13/cobra"
@@ -30,6 +32,7 @@ func init() {
 }
 
 func handler(cmd *cobra.Command, args []string) error {
+	fmt.Println(logs.InfoLog("PDFs generation started"))
 	output, err := cmd.Flags().GetString("output")
 	if err != nil {
 		return apperror.New("Invalid output value",
@@ -85,6 +88,8 @@ func handler(cmd *cobra.Command, args []string) error {
 			apperror.ErrorSensitivityPublic)
 	}
 
+	fmt.Println(logs.InfoLog("Processing JSON data"))
+
 	for _, v := range inputData.Data {
 		if _, err := tone.Validate(&v); err != nil {
 			return err
@@ -99,7 +104,9 @@ func handler(cmd *cobra.Command, args []string) error {
 		fileName := fsc.EnsureFileName(v.FileName, "", "pdf")
 		path := filepath.Join(outputDir, fileName)
 		tone.GenerateT1PDF(path, v)
+		fmt.Println(logs.InfoLog("Processing finished for: " + fileName))
 	}
 
+	fmt.Println(logs.SuccessLog("Generation finished"))
 	return nil
 }

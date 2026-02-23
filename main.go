@@ -8,6 +8,7 @@ import (
 	_ "github.com/othmaneBakkass/cv_gen/cmd/generate"
 	"github.com/othmaneBakkass/cv_gen/cmd/root"
 	apperror "github.com/othmaneBakkass/cv_gen/internal/common/appError"
+	"github.com/othmaneBakkass/cv_gen/internal/common/logs"
 )
 
 func main() {
@@ -16,7 +17,7 @@ func main() {
 		var appErr apperror.AppError
 		if errors.As(err, &appErr) {
 			if appErr.Sensitivity == apperror.ErrorSensitivityPublic {
-				fmt.Fprintln(os.Stderr, "Title:", appErr.Title, "Details:", appErr.Detail)
+				fmt.Println(logs.ErrorLog(fmt.Sprintf("Title: %s Details: %s", appErr.Title, appErr.Detail)))
 			}
 			os.Exit(1)
 		} else {
