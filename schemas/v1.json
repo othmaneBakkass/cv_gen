@@ -3,81 +3,90 @@
 	"title": "CV Gen Schema",
 	"type": "object",
 	"properties": {
-		"template": {
-			"type": "string",
-			"description": "name of the template to use, e.g. example: t1"
-		},
-		"fileName": {
-			"type": "string",
-			"description": "Output file name without extension"
-		},
-		"head": {
-			"type": "object",
-			"properties": {
-				"fullName": { "type": "string" },
-				"address": { "type": "string" },
-				"phone": { "type": "string" },
-				"email": { "type": "string" }
-			},
-			"required": ["fullName", "address", "phone", "email"]
-		},
-		"education": {
+		"data": {
 			"type": "array",
 			"items": {
 				"type": "object",
 				"properties": {
-					"school": { "type": "string" },
-					"location": { "type": "string" },
-					"startedAt": { "type": "string" },
-					"endedAt": { "type": "string" },
-					"degree": { "type": "string" },
-					"description": { "type": "string" }
+					"template": {
+						"type": "string",
+						"description": "name of the template to use, e.g. example: t1"
+					},
+					"fileName": {
+						"type": "string",
+						"description": "Output file name without extension"
+					},
+					"head": {
+						"type": "object",
+						"properties": {
+							"fullName": { "type": "string" },
+							"address": { "type": "string" },
+							"phone": { "type": "string" },
+							"email": { "type": "string" }
+						},
+						"required": ["fullName", "address", "phone", "email"]
+					},
+					"education": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"school": { "type": "string" },
+								"location": { "type": "string" },
+								"startedAt": { "type": "string" },
+								"endedAt": { "type": "string" },
+								"degree": { "type": "string" },
+								"description": { "type": "string" }
+							},
+							"required": [
+								"school",
+								"location",
+								"startedAt",
+								"endedAt",
+								"degree",
+								"description"
+							]
+						}
+					},
+					"jobs": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"company": { "type": "string" },
+								"location": { "type": "string" },
+								"position": { "type": "string" },
+								"startedAt": { "type": "string" },
+								"endedAt": { "type": "string" },
+								"tools": { "type": "array", "items": { "type": "string" } },
+								"highlights": { "type": "array", "items": { "type": "string" } }
+							},
+							"required": [
+								"company",
+								"location",
+								"position",
+								"startedAt",
+								"endedAt",
+								"tools",
+								"highlights"
+							]
+						}
+					},
+					"languages": {
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"language": { "type": "string" },
+								"level": { "type": "string" }
+							},
+							"required": ["language", "level"]
+						}
+					}
 				},
-				"required": [
-					"school",
-					"location",
-					"startedAt",
-					"endedAt",
-					"degree",
-					"description"
-				]
-			}
-		},
-		"jobs": {
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"company": { "type": "string" },
-					"location": { "type": "string" },
-					"position": { "type": "string" },
-					"startedAt": { "type": "string" },
-					"endedAt": { "type": "string" },
-					"tools": { "type": "array", "items": { "type": "string" } },
-					"highlights": { "type": "array", "items": { "type": "string" } }
-				},
-				"required": [
-					"company",
-					"location",
-					"position",
-					"startedAt",
-					"endedAt",
-					"tools",
-					"highlights"
-				]
-			}
-		},
-		"languages": {
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"language": { "type": "string" },
-					"level": { "type": "string" }
-				},
-				"required": ["language", "level"]
+				"required": ["template", "fileName", "head", "education", "jobs", "languages"]
 			}
 		}
 	},
-	"required": ["template", "fileName", "head", "education", "jobs", "languages"]
+	"required": ["data"]
 }
