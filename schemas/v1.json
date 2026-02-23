@@ -5,7 +5,7 @@
 	"properties": {
 		"template": {
 			"type": "string",
-			"description": "Template identifier (any string is valid)"
+			"description": "name of the template to use, e.g. example: t1"
 		},
 		"fileName": {
 			"type": "string",
