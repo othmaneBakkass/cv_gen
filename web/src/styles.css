@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Theme lifted from Templates.claude/CV_Template.docx: a teal accent
+ * (#1F5673) over near-black text (#1A1A1A) and grey secondary text
+ * (#5A6B75), used consistently between the t2 PDF template and this UI.
+ */
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #1f5673;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f5f6;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f0f2f3;
+  --muted-foreground: #5a6b75;
+  --accent: #e7eef1;
+  --accent-foreground: #1f5673;
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: #e2e5e7;
+  --input: #e2e5e7;
+  --ring: #1f5673;
+  --chart-1: #1f5673;
+  --chart-2: #5a6b75;
+  --chart-3: #8a969e;
+  --chart-4: #328f97;
+  --chart-5: #416166;
+  --radius: 0.5rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #1f5673;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e7eef1;
+  --sidebar-accent-foreground: #1f5673;
+  --sidebar-border: #e2e5e7;
+  --sidebar-ring: #1f5673;
+}
+
+.dark {
+  --background: #101619;
+  --foreground: #f2f4f5;
+  --card: #171f23;
+  --card-foreground: #f2f4f5;
+  --popover: #171f23;
+  --popover-foreground: #f2f4f5;
+  --primary: #5a92ac;
+  --primary-foreground: #0d1417;
+  --secondary: #1f2a2f;
+  --secondary-foreground: #f2f4f5;
+  --muted: #1f2a2f;
+  --muted-foreground: #8a969e;
+  --accent: #223038;
+  --accent-foreground: #5a92ac;
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: #263239;
+  --input: #263239;
+  --ring: #5a92ac;
+  --chart-1: #5a92ac;
+  --chart-2: #8a969e;
+  --chart-3: #b7c0c6;
+  --chart-4: #60d7cf;
+  --chart-5: #afcdc8;
+  --sidebar: #171f23;
+  --sidebar-foreground: #f2f4f5;
+  --sidebar-primary: #5a92ac;
+  --sidebar-primary-foreground: #0d1417;
+  --sidebar-accent: #223038;
+  --sidebar-accent-foreground: #5a92ac;
+  --sidebar-border: #263239;
+  --sidebar-ring: #5a92ac;
+}
+
+@theme inline {
+  --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}
+
+/*
+ * Design-system utilities shared across the marketing and app surfaces.
+ * Everything here is token-driven (var(--primary), etc.) so light/dark and
+ * any future re-theme flow through automatically. Motion is opt-in and
+ * disabled under prefers-reduced-motion.
+ */
+@layer utilities {
+  /* Accent text: a subtle teal gradient for hero words and stat numbers. */
+  .text-gradient {
+    background: linear-gradient(
+      100deg,
+      var(--primary) 0%,
+      color-mix(in oklab, var(--primary) 65%, var(--foreground)) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Faint grid + radial glow backdrop for hero/CTA sections. */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--border) 60%, transparent) 1px, transparent 1px);
+    background-size: 32px 32px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  .glow {
+    background: radial-gradient(
+      ellipse 60% 50% at 50% 0%,
+      color-mix(in oklab, var(--primary) 22%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  /* Scroll-reveal: hidden until the Reveal component marks data-shown. */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+    will-change: opacity, transform;
+  }
+  [data-reveal][data-shown='true'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  @keyframes float-slow {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  .animate-float {
+    animation: float-slow 6s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .animate-float {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}

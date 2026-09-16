@@ -2,42 +2,53 @@
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"title": "CV Gen Schema",
 	"type": "object",
+	"required": ["data"],
 	"properties": {
 		"data": {
 			"type": "array",
+			"minItems": 1,
 			"items": {
 				"type": "object",
+				"required": ["template", "fileName", "head", "education", "jobs", "languages"],
 				"properties": {
 					"template": {
 						"type": "string",
-						"description": "name of the template to use, e.g. example: t1"
+						"enum": ["t1", "t2", "t3"],
+						"description": "Name of the template to use. t1 'ATS Classic': conservative navy, non-italic, experience-before-education order — built for ATS parsing and the Moroccan/French hiring convention. t2 'Navy Rule': editorial, teal-accented, tracked uppercase headings. t3 'Modern Minimal': compact, indigo-accented, no rule under headings, en-dash bullets."
 					},
 					"fileName": {
 						"type": "string",
-						"description": "Output file name without extension"
+						"minLength": 1,
+						"description": "Output file name (without extension); path components are stripped."
 					},
 					"head": {
 						"type": "object",
+						"required": ["fullName", "address", "phone", "email"],
 						"properties": {
-							"fullName": { "type": "string" },
-							"address": { "type": "string" },
-							"phone": { "type": "string" },
-							"email": { "type": "string" }
-						},
-						"required": ["fullName", "address", "phone", "email"]
+							"fullName": { "type": "string", "minLength": 1 },
+							"address": { "type": "string", "minLength": 1 },
+							"phone": { "type": "string", "minLength": 1 },
+							"email": { "type": "string", "format": "email", "minLength": 1 },
+							"jobTitle": { "type": "string", "minLength": 1, "description": "Optional. Shown under the name (e.g. \"Software Engineer\")." },
+							"specialties": {
+								"type": "array",
+								"items": { "type": "string", "minLength": 1 },
+								"description": "Optional. Short specialty tags shown under the job title."
+							},
+							"linkedin": { "type": "string", "minLength": 1, "description": "Optional. LinkedIn profile URL." },
+							"github": { "type": "string", "minLength": 1, "description": "Optional. GitHub profile URL." },
+							"photo": { "type": "string", "minLength": 1, "description": "Optional. Path to a local image file, resolved relative to the input JSON's directory." }
+						}
+					},
+					"profile": {
+						"type": "string",
+						"description": "Optional. A short summary paragraph shown near the top of the CV."
 					},
 					"education": {
 						"type": "array",
+						"minItems": 1,
 						"items": {
 							"type": "object",
-							"properties": {
-								"school": { "type": "string" },
-								"location": { "type": "string" },
-								"startedAt": { "type": "string" },
-								"endedAt": { "type": "string" },
-								"degree": { "type": "string" },
-								"description": { "type": "string" }
-							},
 							"required": [
 								"school",
 								"location",
@@ -45,22 +56,22 @@
 								"endedAt",
 								"degree",
 								"description"
-							]
+							],
+							"properties": {
+								"school": { "type": "string", "minLength": 1 },
+								"location": { "type": "string", "minLength": 1 },
+								"startedAt": { "type": "string", "minLength": 1 },
+								"endedAt": { "type": "string", "minLength": 1 },
+								"degree": { "type": "string", "minLength": 1 },
+								"description": { "type": "string", "minLength": 1 }
+							}
 						}
 					},
 					"jobs": {
 						"type": "array",
+						"minItems": 1,
 						"items": {
 							"type": "object",
-							"properties": {
-								"company": { "type": "string" },
-								"location": { "type": "string" },
-								"position": { "type": "string" },
-								"startedAt": { "type": "string" },
-								"endedAt": { "type": "string" },
-								"tools": { "type": "array", "items": { "type": "string" } },
-								"highlights": { "type": "array", "items": { "type": "string" } }
-							},
 							"required": [
 								"company",
 								"location",
@@ -69,24 +80,142 @@
 								"endedAt",
 								"tools",
 								"highlights"
-							]
+							],
+							"properties": {
+								"company": { "type": "string", "minLength": 1 },
+								"location": { "type": "string", "minLength": 1 },
+								"position": { "type": "string", "minLength": 1 },
+								"startedAt": { "type": "string", "minLength": 1 },
+								"endedAt": { "type": "string", "minLength": 1 },
+								"tools": {
+									"type": "array",
+									"items": { "type": "string", "minLength": 1 }
+								},
+								"highlights": {
+									"type": "array",
+									"items": { "type": "string", "minLength": 1 }
+								}
+							}
 						}
 					},
 					"languages": {
 						"type": "array",
+						"minItems": 1,
 						"items": {
 							"type": "object",
+							"required": ["language", "level"],
 							"properties": {
-								"language": { "type": "string" },
-								"level": { "type": "string" }
+								"language": { "type": "string", "minLength": 1 },
+								"level": { "type": "string", "minLength": 1 }
+							}
+						}
+					},
+					"skills": {
+						"type": "array",
+						"description": "Optional. Technical skills grouped by category.",
+						"items": {
+							"type": "object",
+							"required": ["category", "items"],
+							"properties": {
+								"category": { "type": "string", "minLength": 1, "description": "e.g. \"Languages\", \"Frameworks\", \"Databases\"." },
+								"items": {
+									"type": "array",
+									"minItems": 1,
+									"items": { "type": "string", "minLength": 1 }
+								}
+							}
+						}
+					},
+					"projects": {
+						"type": "array",
+						"description": "Optional. Notable projects.",
+						"items": {
+							"type": "object",
+							"required": ["name", "tech", "description"],
+							"properties": {
+								"name": { "type": "string", "minLength": 1 },
+								"tech": { "type": "string", "minLength": 1 },
+								"description": { "type": "string", "minLength": 1 }
+							}
+						}
+					},
+					"certifications": {
+						"type": "array",
+						"description": "Optional. Flat list of certification titles, e.g. \"AWS Certified Solutions Architect — Amazon\".",
+						"items": { "type": "string", "minLength": 1 }
+					},
+					"settings": {
+						"type": "object",
+						"description": "Optional. Per-entry presentation options — language, section visibility/order, and color overrides. Every field is independent; omit anything you want the template's default for. CLI flags (see the generate command) override the same setting when both are given.",
+						"properties": {
+							"lang": {
+								"type": "string",
+								"enum": ["en", "fr"],
+								"description": "Optional. Template label language (headings, \"Stack:\", date separator). Does not translate your content. Default: en."
 							},
-							"required": ["language", "level"]
+							"density": {
+								"type": "string",
+								"enum": ["dense", "normal", "airy"],
+								"description": "Optional. Spacing scale: dense (0.85x), normal (1x, default), airy (1.15x)."
+							},
+							"sections": {
+								"type": "object",
+								"description": "Optional. Per-section visibility/order overrides. education, experience and languages have no \"include\" (the schema already requires at least one entry) but can still be reordered.",
+								"properties": {
+									"profile": { "$ref": "#/definitions/sectionSetting" },
+									"education": { "$ref": "#/definitions/sectionSetting" },
+									"experience": { "$ref": "#/definitions/sectionSetting" },
+									"skills": { "$ref": "#/definitions/sectionSetting" },
+									"projects": { "$ref": "#/definitions/sectionSetting" },
+									"certifications": { "$ref": "#/definitions/sectionSetting" },
+									"languages": { "$ref": "#/definitions/sectionSetting" }
+								}
+							},
+							"colors": { "$ref": "#/definitions/colorSettings" }
 						}
 					}
-				},
-				"required": ["template", "fileName", "head", "education", "jobs", "languages"]
+				}
 			}
 		}
 	},
-	"required": ["data"]
+	"definitions": {
+		"sectionSetting": {
+			"type": "object",
+			"description": "Set include, priority, and/or per-section style for one section. priority: lower renders first; sections not mentioned keep the template's default order.",
+			"properties": {
+				"include": { "type": "boolean" },
+				"priority": { "type": "integer" },
+				"style": { "$ref": "#/definitions/sectionStyle" }
+			}
+		},
+		"sectionStyle": {
+			"type": "object",
+			"description": "Per-section style overrides (the \"Section Overrides\" layer of Global Template Defaults -> Section Overrides -> Rendered Section). Every field is optional and inherits the template's value when omitted.",
+			"properties": {
+				"divider": { "type": "boolean", "description": "false removes this section's heading rule; true forces it on." },
+				"spaceBefore": { "type": "number", "description": "Vertical gap (points) before this section, overriding the default rhythm." },
+				"uppercase": { "type": "boolean", "description": "Override whether this section's heading is upper-cased." },
+				"colors": { "$ref": "#/definitions/colorSettings" }
+			}
+		},
+		"colorSettings": {
+			"type": "object",
+			"description": "Overrides the template's semantic color palette. Each value is a hex color, e.g. \"#1F3864\" (the \"#\" is optional); omit a role to keep the template's default. The four legacy keys (accent/grey/muted/ink) still work and map onto the semantic roles (accent -> headline + border, grey -> metadata, muted -> profile, ink -> body); if both a legacy key and its semantic role are set, the semantic value wins.",
+			"properties": {
+				"headline": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Section headings, the name, and the \"Stack:\" label." },
+				"subheadline": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "The tagline/role line under the name." },
+				"body": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Body copy, entry titles, bullets, skills, contact." },
+				"metadata": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Dates, company/school, specialties, stack value." },
+				"link": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Hyperlinks (LinkedIn/GitHub)." },
+				"border": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Header and section rules/dividers." },
+				"profile": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "The profile/summary paragraph." },
+				"background": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Page background (drawn only when not white)." },
+
+				"accent": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Deprecated alias -> headline + border." },
+				"grey": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Deprecated alias -> metadata." },
+				"muted": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Deprecated alias -> profile." },
+				"ink": { "type": "string", "pattern": "^#?[0-9a-fA-F]{6}$", "description": "Deprecated alias -> body." }
+			}
+		}
+	}
 }

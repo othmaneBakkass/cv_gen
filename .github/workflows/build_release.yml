@@ -5,27 +5,44 @@ on:
     tags:
       - "v*.*.*"
 
+permissions:
+  contents: write
+
 jobs:
-  builder:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Setup go
-        uses: actions/setup-go@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          go-version: "1.25"
+          go-version-file: go.mod
+          cache: true
 
-      - name: Build binary
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build (all packages)
+        run: go build ./...
+
+      - name: Cross-compile release binaries
         run: |
           mkdir -p dist
-          GOOS=linux GOARCH=amd64 go build -o dist/cv_gen main.go
-          GOOS=darwin GOARCH=amd64 go build -o dist/cv_gen_darwin main.go
-          GOOS=windows GOARCH=amd64 go build -o dist/cv_gen.exe main.go
+          platforms="linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64"
+          for platform in $platforms; do
+            GOOS="${platform%/*}"
+            GOARCH="${platform#*/}"
+            ext=""
+            if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
+            echo "Building $GOOS/$GOARCH"
+            CGO_ENABLED=0 GOOS="$GOOS" GOARCH="$GOARCH" \
+              go build -trimpath -ldflags "-s -w" -o "dist/cv_gen_${GOOS}_${GOARCH}${ext}" .
+          done
+          ( cd dist && sha256sum cv_gen_* > checksums.txt )
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: dist/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          fail_on_unmatched_files: true

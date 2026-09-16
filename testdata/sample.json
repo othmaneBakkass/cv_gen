@@ -1,0 +1,103 @@
+{
+	"data": [
+		{
+			"template": "t1",
+			"fileName": "rick-sanchez",
+			"head": {
+				"fullName": "Rick Sanchez",
+				"address": "Seattle, WA (dimension C-137)",
+				"phone": "+1 555 0100",
+				"email": "rick@wubbalubba.dev"
+			},
+			"education": [
+				{
+					"school": "university of washington",
+					"location": "Seattle, WA",
+					"startedAt": "1975",
+					"endedAt": "1979",
+					"degree": "Ph.D. in Theoretical Physics",
+					"description": "Dissertation on trans-dimensional portal mechanics."
+				},
+				{
+					"school": "smith college of interdimensional studies",
+					"location": "Unknown",
+					"startedAt": "1980",
+					"endedAt": "1982",
+					"degree": "Postdoc, Applied Multiverse Engineering",
+					"description": "Built the first working portal gun prototype."
+				}
+			],
+			"jobs": [
+				{
+					"company": "self-employed",
+					"location": "The Garage",
+					"position": "mad scientist",
+					"startedAt": "2013",
+					"endedAt": "Present",
+					"tools": ["Portal Gun", "Plumbus", "Microverse Battery", "Go", "Rust"],
+					"highlights": [
+						"Designed and shipped a pocket-sized portal gun with 99.9% dimensional accuracy.",
+						"Reduced spaceship assembly time from 3 weeks to 20 minutes using scavenged parts.",
+						"Mentored one (1) grandson through 6 seasons of high-risk field work."
+					]
+				},
+				{
+					"company": "galactic federation (involuntary)",
+					"location": "Federation Prison",
+					"position": "consultant",
+					"startedAt": "2017",
+					"endedAt": "2017",
+					"tools": ["Brainalyzer", "Shock Collar"],
+					"highlights": [
+						"Optimized a simple syrup formula the entire galaxy depended on.",
+						"Escaped custody and collapsed the Federation economy in a single afternoon."
+					]
+				}
+			],
+			"languages": [
+				{ "language": "english", "level": "native" },
+				{ "language": "birdperson", "level": "conversational" },
+				{ "language": "gromflomite", "level": "basic" }
+			]
+		},
+		{
+			"template": "t1",
+			"fileName": "morty-smith",
+			"head": {
+				"fullName": "Morty Smith",
+				"address": "Seattle, WA",
+				"phone": "+1 555 0142",
+				"email": "morty.smith@harryherpson.edu"
+			},
+			"education": [
+				{
+					"school": "harry herpson high school",
+					"location": "Seattle, WA",
+					"startedAt": "2015",
+					"endedAt": "2019",
+					"degree": "High School Diploma (in progress)",
+					"description": "Frequent absences due to off-world field research."
+				}
+			],
+			"jobs": [
+				{
+					"company": "sanchez adventures",
+					"location": "Various Dimensions",
+					"position": "field assistant",
+					"startedAt": "2013",
+					"endedAt": "Present",
+					"tools": ["Grappling Hook", "Laser Pistol", "First Aid Kit"],
+					"highlights": [
+						"Completed 100+ interdimensional missions with a non-zero survival rate.",
+						"Kept a level head during at least three planet-scale extinction events.",
+						"Learned intermediate improvised negotiation under extreme pressure."
+					]
+				}
+			],
+			"languages": [
+				{ "language": "english", "level": "native" },
+				{ "language": "spanish", "level": "basic" }
+			]
+		}
+	]
+}

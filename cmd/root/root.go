@@ -5,8 +5,9 @@ import "github.com/spf13/cobra"
 var RootCommand = &cobra.Command{
 	Use:           "cv_gen",
 	Short:         "cv_gen is a tool for generating CVs.",
-	Long:          "cv_gen is a tool for generating CVs based on a json file.",
+	Long:          "cv_gen generates CVs from a JSON file.",
 	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func RootCommandExecute() error {

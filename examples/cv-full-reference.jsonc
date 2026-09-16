@@ -1,0 +1,187 @@
+// Full reference for the cv_gen input JSON.
+//
+// This file documents EVERY field the schema (schemas/v1.json) accepts,
+// including every optional block and every settings knob. It is JSONC
+// (JSON + comments) for documentation purposes only — encoding/json (what
+// cv_gen actually uses) does not accept comments, so this file will NOT
+// parse as-is. Strip the comments before feeding it to `generate`/`serve`,
+// or start from a plain example instead (examples/cv.json, cv-t1.json,
+// cv-t2.json, cv-t3.json, cv-long.json, cv-settings-test.json).
+//
+// Top-level shape: { "data": [ <CV>, <CV>, ... ] } — one JSON file can
+// generate multiple CVs/PDFs in one run; the array must have >= 1 entry.
+{
+  "data": [
+    {
+      // Required. Which template to render with.
+      //   t1 "ATS Classic"   — conservative navy, non-italic, experience
+      //                        before education. Built for ATS parsing and
+      //                        the Moroccan/French hiring convention.
+      //   t2 "Navy Rule"     — editorial, teal-accented, tracked uppercase
+      //                        headings.
+      //   t3 "Modern Minimal" — compact, indigo-accented, no rule under
+      //                        headings, en-dash bullets.
+      "template": "t1",
+
+      // Required. Output file name, WITHOUT extension. Path components
+      // (slashes) are stripped — this is a name, not a path.
+      "fileName": "jane-doe-cv",
+
+      // Required. Header block.
+      "head": {
+        "fullName": "Jane Doe",              // required
+        "address": "Casablanca, Morocco",    // required
+        "phone": "+212 600 000 000",         // required
+        "email": "jane.doe@example.com",     // required, must look like an email
+
+        "jobTitle": "Senior Backend Engineer", // optional — shown under the name
+
+        "specialties": [                     // optional — short tags under the job title
+          "Distributed Systems",
+          "Cloud Infrastructure"
+        ],
+
+        "linkedin": "linkedin.com/in/jane-doe", // optional
+        "github": "github.com/janedoe",         // optional
+
+        // optional — path to a local image, resolved relative to the INPUT
+        // JSON FILE's directory. Only meaningful on the CLI; the HTTP
+        // /api/generate endpoint always clears this field (no filesystem
+        // access over HTTP), so photos are CLI-only for now.
+        "photo": "./photo.jpg"
+      },
+
+      // Optional. Short summary paragraph shown near the top of the CV.
+      // Omit the whole key to skip the profile section entirely (or use
+      // settings.sections.profile.include = false to hide it while keeping
+      // the data).
+      "profile": "Backend engineer with 6+ years building distributed systems and cloud infrastructure.",
+
+      // Required, minItems 1. Reverse-chronological is conventional but not enforced.
+      "education": [
+        {
+          "school": "École Nationale Supérieure d'Informatique", // required
+          "location": "Rabat",                                  // required
+          "startedAt": "2016",                                  // required — free-text, not a date type
+          "endedAt": "2019",                                    // required — free-text, e.g. "Present" is fine
+          "degree": "B.Sc. in Software Engineering",            // required
+          "description": "Focus on distributed systems and compilers." // required
+        }
+      ],
+
+      // Required, minItems 1.
+      "jobs": [
+        {
+          "company": "Acme Corp",       // required
+          "location": "Remote",         // required
+          "position": "Backend Engineer", // required
+          "startedAt": "2021",          // required
+          "endedAt": "Present",         // required
+          "tools": ["Go", "PostgreSQL", "Kubernetes", "gRPC"], // required (can be empty array, not omitted)
+          "highlights": [               // required — bullet points
+            "Cut p99 API latency by 40% by introducing a read-through cache.",
+            "Led the migration of 30+ services from REST to gRPC."
+          ]
+        }
+      ],
+
+      // Required, minItems 1.
+      "languages": [
+        { "language": "Arabic", "level": "Native" },       // both required, free-text
+        { "language": "French", "level": "Fluent" },
+        { "language": "English", "level": "Professional" }
+      ],
+
+      // Optional. Technical skills grouped by category.
+      "skills": [
+        {
+          "category": "Languages",       // required — e.g. "Languages", "Frameworks", "Databases"
+          "items": ["Go", "TypeScript", "Python"] // required, minItems 1
+        },
+        {
+          "category": "DevOps & Cloud",
+          "items": ["Kubernetes", "Docker", "AWS", "Terraform"]
+        }
+      ],
+
+      // Optional. Notable projects.
+      "projects": [
+        {
+          "name": "cv_gen",                          // required
+          "tech": "Go, maroto",                      // required — free-text stack line
+          "description": "A CLI that generates multi-template PDF CVs from a JSON file." // required
+        }
+      ],
+
+      // Optional. Flat list of certification titles (no dates/issuer fields —
+      // bake that into the string if you want it, e.g. "X — Issuer (2023)").
+      "certifications": [
+        "AWS Certified Solutions Architect — Amazon",
+        "Certified Kubernetes Administrator — CNCF"
+      ],
+
+      // Optional. Per-entry presentation overrides. Every field here is
+      // independent; omit anything you want the template's own default for.
+      // CLI flags on `generate` override the same setting when both are given.
+      "settings": {
+        // Optional. Template label language (headings, "Stack:" label, date
+        // separator). Does NOT translate your own content. Default: "en".
+        "lang": "en", // "en" | "fr"
+
+        // Optional. Overall spacing scale. Default: "normal".
+        "density": "normal", // "dense" (0.85x) | "normal" (1x) | "airy" (1.15x)
+
+        // Optional. Per-section visibility/order/style overrides.
+        // education, experience and languages have no "include" flag (the
+        // schema already requires >=1 entry for them) but CAN still be
+        // reordered via "priority".
+        "sections": {
+          "profile": {
+            "include": true,   // false hides the section even if data is present
+            "priority": 10,    // lower renders first; unlisted sections keep template default order
+            "style": {
+              "divider": false,     // false removes the heading rule, true forces it on
+              "spaceBefore": 12,    // points of vertical gap before this section
+              "uppercase": false,   // override whether the heading is upper-cased
+              // Per-section color overrides — same keys as the global
+              // "colors" block below, scoped to just this section.
+              "colors": {
+                "headline": "#1F3864",
+                "profile": "#333333"
+              }
+            }
+          },
+          "education":     { "priority": 20 },
+          "experience":    { "priority": 30 },
+          "skills":        { "include": true, "priority": 40 },
+          "projects":      { "include": false },   // hide projects even though data exists above
+          "certifications": { "priority": 50 },
+          "languages":     { "priority": 100 }     // push languages to the end
+        },
+
+        // Optional. Overrides the template's semantic color palette.
+        // Every value is a 6-digit hex color; the leading "#" is optional.
+        // Omit any role to keep the template's default for it.
+        "colors": {
+          "headline": "#1F3864",    // section headings, the name, the "Stack:" label
+          "subheadline": "#4472C4", // tagline/role line under the name
+          "body": "#111111",        // body copy, entry titles, bullets, skills, contact
+          "metadata": "#555555",    // dates, company/school, specialties, stack value
+          "link": "#0563C1",        // hyperlinks (LinkedIn/GitHub)
+          "border": "#1F3864",      // header and section rule/divider lines
+          "profile": "#333333",     // the profile/summary paragraph
+          "background": "#FFFFFF",  // page background (only drawn when not white)
+
+          // Deprecated legacy aliases — still accepted for backward
+          // compatibility. If both an alias and its semantic role are set,
+          // the semantic value wins.
+          "accent": "#8B0000",  // -> maps to headline + border
+          "grey": "#555555",    // -> maps to metadata
+          "muted": "#AAAAAA",   // -> maps to profile
+          "ink": "#111111"      // -> maps to body
+        }
+      }
+    }
+    // Add more objects here to generate multiple CVs in one call.
+  ]
+}

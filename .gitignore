@@ -17,7 +17,12 @@
 # Build output directories
 _build/
 bin/
+dist/
 version/version.go
+
+# Generated CVs
+*.pdf
+/output/
 
 # -----------------------------
 # Dependency management
@@ -39,13 +44,32 @@ version/version.go
 # macOS
 .DS_Store
 
+# Windows
+Thumbs.db
+desktop.ini
+
 # Editors
 .idea/
 *.iml
 .vscode/
+*.bak
+*~
 
 # Profiles
 profile
+
+# -----------------------------
+# AI agent / skills / plugin tooling
+# -----------------------------
+.agents/
+.claude/
+.codex/
+.github/agents/
+.github/hooks/
+.github/skills/
+graphify-out/
+skills-lock.json
+CLAUDE.md
 
 # -----------------------------
 # Logs / temporary files

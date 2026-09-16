@@ -1,126 +1,97 @@
-package tone
+// Package t1 renders a CV using the "ATS Classic" layout: a conservative,
+// single-hue, non-italic design built for two things t2 doesn't
+// prioritize — passing keyword-matching ATS software cleanly, and
+// following the Moroccan/French hiring convention (reverse-chronological,
+// experience-led, sober navy, no editorial tracking/uppercase flourishes
+// beyond plain section headings). It shares every drawing primitive with
+// t2 (internal/pdf/draw, internal/pdf/comp, internal/pdf/sections) — only
+// the theme (internal/pdf/theme.T1) and the section order differ. See
+// docs/pdf-rewrite-handoff.md for the layered architecture this and every
+// other template is built on.
+package t1
 
 import (
-	"fmt"
-	"strings"
-
-	"github.com/johnfercher/maroto/v2/pkg/components/line"
-	"github.com/johnfercher/maroto/v2/pkg/components/row"
-	"github.com/johnfercher/maroto/v2/pkg/components/text"
-	"github.com/johnfercher/maroto/v2/pkg/consts/align"
-	"github.com/johnfercher/maroto/v2/pkg/consts/fontstyle"
-	"github.com/johnfercher/maroto/v2/pkg/core"
-	"github.com/johnfercher/maroto/v2/pkg/props"
-	apperror "github.com/othmaneBakkass/cv_gen/internal/common/appError"
-	"github.com/othmaneBakkass/cv_gen/internal/common/stringc"
-	"github.com/othmaneBakkass/cv_gen/internal/pdf"
+	"github.com/othmaneBakkass/cv_gen/internal/pdf/comp"
+	"github.com/othmaneBakkass/cv_gen/internal/pdf/draw"
+	"github.com/othmaneBakkass/cv_gen/internal/pdf/i18n"
+	"github.com/othmaneBakkass/cv_gen/internal/pdf/render"
+	"github.com/othmaneBakkass/cv_gen/internal/pdf/sections"
+	"github.com/othmaneBakkass/cv_gen/internal/pdf/theme"
+	"github.com/othmaneBakkass/cv_gen/internal/schema"
 )
 
-type InputData struct {
-	Data []JSONSchema `json:"data"`
-}
+// Render builds the t1 layout for cv under opts and returns the finished
+// PDF bytes. The whole layout is built through render.FitToOnePage, which
+// re-runs it against progressively tighter spacing until it fits on one
+// page (or gives up at a floor and lets it spill onto a second).
+func Render(cv schema.CV, opts render.Options) ([]byte, error) {
+	th := opts.EffectiveMargins(opts.ApplyTheme(theme.T1))
+	labels := i18n.For(opts.Lang)
 
-type fontSize struct {
-	lg   float64
-	base float64
-	sm   float64
-}
-
-var fontSizes = fontSize{
-	lg:   16,
-	base: 13,
-	sm:   11,
-}
-
-func t1(data JSONSchema) core.Maroto {
-	engine := pdf.GetEngine()
-	head(engine, data.Head)
-	header(engine, "Education")
-	educationSection(engine, data.Education)
-	header(engine, "Experience")
-	jobSection(engine, data.Jobs)
-	header(engine, "Languages")
-	langSection(engine, data.Languages)
-	return engine
-}
-
-func head(engine core.Maroto, params HeadSchema) {
-	engine.AddAutoRow(text.NewCol(12, params.FullName, props.Text{Align: align.Center, Style: fontstyle.Bold, Size: fontSizes.lg}))
-	engine.AddRow(1)
-	engine.AddAutoRow(
-		text.NewCol(12, fmt.Sprintf("%s | %s | %s", params.Address, params.Email, params.Phone), props.Text{Align: align.Center, Size: 13}),
-	)
-	engine.AddRow(6)
-}
-
-func header(engine core.Maroto, label string) {
-	engine.AddAutoRow(text.NewCol(12, strings.ToUpper(label), props.Text{Align: align.Left, Style: fontstyle.Bold, Size: 13}))
-	engine.AddRow(1)
-	engine.AddAutoRow(line.NewCol(12, props.Line{OffsetPercent: 0, SizePercent: 100}))
-	engine.AddRow(2)
-}
-
-func educationSection(engine core.Maroto, education []EducationSchema) {
-	for _, v := range education {
-		engine.AddAutoRow(
-			text.NewCol(6, stringc.ToCapital(v.School), props.Text{Align: align.Left, Style: fontstyle.Bold, Size: fontSizes.base}),
-			text.NewCol(6, fmt.Sprintf("%s | %s - %s", v.Location, v.StartedAt, v.EndedAt), props.Text{Align: align.Right, Size: fontSizes.base}),
-		)
-		engine.AddRow(1)
-		engine.AddAutoRow(text.NewCol(12, v.Degree, props.Text{Align: align.Left, Size: fontSizes.base}))
-		engine.AddRow(1)
-		engine.AddAutoRow(text.NewCol(12, v.Description, props.Text{Align: align.Left, Size: fontSizes.base}))
-		engine.AddRow(4)
+	build := func(d *draw.Doc) error {
+		return renderBody(d, cv, opts, labels)
 	}
-}
 
-func jobSection(engine core.Maroto, jobs []JobSchema) {
-	for _, v := range jobs {
-		engine.AddAutoRow(
-			text.NewCol(6, stringc.ToCapital(v.Company), props.Text{Align: align.Left, Style: fontstyle.Bold, Size: fontSizes.base}),
-			text.NewCol(6, v.Location, props.Text{Align: align.Right, Size: fontSizes.base}),
-		)
-		engine.AddRow(1)
-		engine.AddAutoRow(
-			text.NewCol(6, stringc.ToCapital(v.Position), props.Text{Align: align.Left, Style: fontstyle.Bold, Size: fontSizes.base}),
-			text.NewCol(6, fmt.Sprintf("%s - %s", v.StartedAt, v.EndedAt), props.Text{Align: align.Right, Style: fontstyle.Italic, Size: fontSizes.base}),
-		)
-		engine.AddRow(1)
-		engine.AddAutoRow(text.NewCol(12, strings.Join(v.Tools, ", "), props.Text{Align: align.Left, Size: fontSizes.sm}))
-		var highlights []core.Row
-		for _, highlight := range v.Highlights {
-			highlights = append(highlights, row.New().Add(
-				text.NewCol(0, "  •  ", props.Text{Size: 13}),
-				text.NewCol(12, highlight, props.Text{Size: 13, Left: 6}),
-			), row.New(2))
-		}
-		engine.AddRow(2)
-		engine.AddRows(highlights...)
-		engine.AddRow(4)
-	}
-}
-
-func langSection(engine core.Maroto, langs []LanguageSchema) {
-	var parts = []string{}
-	for _, v := range langs {
-		parts = append(parts, fmt.Sprintf("%s - %s", stringc.ToCapital(v.Language), stringc.ToCapital(v.Level)))
-	}
-	engine.AddAutoRow(
-		text.NewCol(12, strings.Join(parts, " | "), props.Text{Align: align.Left, Size: 13}),
-	)
-}
-
-func GenerateT1PDF(saveAt string, data JSONSchema) error {
-	var engine = t1(data)
-	doc, err := engine.Generate()
-
+	d, err := render.FitToOnePage(th, opts.EffectiveSpacing(th.Spacing), build)
 	if err != nil {
-		return apperror.New("PDF generation", "PDF could not be generated", apperror.ErrorCodeUnknown, apperror.ErrorSensitivityPublic)
+		return nil, err
+	}
+	return d.Bytes()
+}
+
+func renderBody(d *draw.Doc, cv schema.CV, opts render.Options, labels i18n.Labels) error {
+	if err := comp.Header(d, cv.Head); err != nil {
+		return err
 	}
 
-	err = doc.Save(saveAt)
-	if err != nil {
-		return apperror.New("PDF save", "PDF could not be saved", apperror.ErrorCodeUnknown, apperror.ErrorSensitivityPublic)
+	// Default order puts Experience before Education (priorities 20/30,
+	// the reverse of t2's 20/30 split) — the convention recruiters and
+	// ATS parsers expect once a candidate has real work history, rather
+	// than t2's academic-CV-style Profile-then-Education-first order.
+	list := []render.Section{
+		{Key: render.Profile, Priority: opts.PriorityOf(render.Profile, 10), HasData: cv.Profile != "", Body: func(d *draw.Doc) error {
+			if err := comp.SectionHeading(d, labels.Profile); err != nil {
+				return err
+			}
+			return comp.Profile(d, cv.Profile)
+		}},
+		{Key: render.Experience, Priority: opts.PriorityOf(render.Experience, 20), HasData: len(cv.Jobs) > 0, Body: func(d *draw.Doc) error {
+			if err := comp.SectionHeading(d, labels.Experience); err != nil {
+				return err
+			}
+			return sections.Jobs(d, cv.Jobs, labels)
+		}},
+		{Key: render.Education, Priority: opts.PriorityOf(render.Education, 30), HasData: len(cv.Education) > 0, Body: func(d *draw.Doc) error {
+			if err := comp.SectionHeading(d, labels.Education); err != nil {
+				return err
+			}
+			return sections.Education(d, cv.Education, labels)
+		}},
+		{Key: render.Skills, Priority: opts.PriorityOf(render.Skills, 40), HasData: len(cv.Skills) > 0, Body: func(d *draw.Doc) error {
+			if err := comp.SectionHeading(d, labels.Skills); err != nil {
+				return err
+			}
+			return sections.Skills(d, cv.Skills)
+		}},
+		{Key: render.Projects, Priority: opts.PriorityOf(render.Projects, 50), HasData: len(cv.Projects) > 0, Body: func(d *draw.Doc) error {
+			if err := comp.SectionHeading(d, labels.Projects); err != nil {
+				return err
+			}
+			return sections.Projects(d, cv.Projects)
+		}},
+		{Key: render.Certifications, Priority: opts.PriorityOf(render.Certifications, 60), HasData: len(cv.Certifications) > 0, Body: func(d *draw.Doc) error {
+			if err := comp.SectionHeading(d, labels.Certifications); err != nil {
+				return err
+			}
+			return comp.BulletList(d, cv.Certifications)
+		}},
+		{Key: render.Languages, Priority: opts.PriorityOf(render.Languages, 70), HasData: len(cv.Languages) > 0, Body: func(d *draw.Doc) error {
+			if err := comp.SectionHeading(d, labels.Languages); err != nil {
+				return err
+			}
+			return sections.Languages(d, cv.Languages)
+		}},
 	}
-	return nil
+
+	return render.RunSections(d, opts, list)
 }

@@ -1,65 +1,85 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 # =========================
 # Configuration
 # =========================
 
-VERSION=${1:-latest}           # Default to latest release if no version specified
+VERSION="${1:-latest}"          # release tag (e.g. v1.0.0) or "latest"
 REPO="othmaneBakkass/cv_gen"
 BIN_NAME="cv_gen"
 
 # =========================
-# Detect OS and Architecture
+# Detect OS and architecture
 # =========================
 
-OS=$(uname | tr '[:upper:]' '[:lower:]')
+case "$(uname -s)" in
+    Linux*)   OS="linux" ;;
+    Darwin*)  OS="darwin" ;;
+    MINGW*|MSYS*|CYGWIN*|Windows_NT) OS="windows" ;;
+    *) echo "Unsupported OS: $(uname -s)" >&2; exit 1 ;;
+esac
+
+case "$(uname -m)" in
+    x86_64|amd64)  ARCH="amd64" ;;
+    arm64|aarch64) ARCH="arm64" ;;
+    *) echo "Unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+esac
 
 # =========================
-# Determine binary name for download
+# Resolve download URL
 # =========================
 
-if [[ "$OS" == "linux" ]]; then
-    BIN_DOWNLOAD_NAME="cv_gen"
-    BIN_DIR="/usr/local/bin"
-    if [ ! -w "$BIN_DIR" ]; then
-        echo "Warning: You may need to run this script with sudo to install in $BIN_DIR"
-    fi
-elif [[ "$OS" == "darwin" ]]; then
-    BIN_DOWNLOAD_NAME="cv_gen_darwin"
-    BIN_DIR="/usr/local/bin"
-    if [ ! -w "$BIN_DIR" ]; then
-        echo "Warning: You may need to run this script with sudo to install in $BIN_DIR"
-    fi
-elif [[ "$OS" == "windows" ]]; then
-    BIN_DOWNLOAD_NAME="cv_gen.exe"
-    BIN_DIR="$HOME/bin"
-    mkdir -p "$BIN_DIR"
+ASSET="cv_gen_${OS}_${ARCH}"
+EXT=""
+if [ "$OS" = "windows" ]; then
+    ASSET="${ASSET}.exe"
+    EXT=".exe"
+fi
+
+if [ "$VERSION" = "latest" ]; then
+    URL="https://github.com/${REPO}/releases/latest/download/${ASSET}"
 else
-    echo "Unsupported OS: $OS"
+    URL="https://github.com/${REPO}/releases/download/${VERSION}/${ASSET}"
+fi
+
+# =========================
+# Choose install directory
+# =========================
+
+if [ "$OS" = "windows" ]; then
+    BIN_DIR="${BIN_DIR:-$HOME/bin}"
+else
+    BIN_DIR="${BIN_DIR:-/usr/local/bin}"
+fi
+
+if [ ! -d "$BIN_DIR" ]; then
+    mkdir -p "$BIN_DIR" 2>/dev/null || {
+        echo "Cannot create $BIN_DIR (try: sudo BIN_DIR=$BIN_DIR $0 $VERSION)" >&2
+        exit 1
+    }
+fi
+
+if [ ! -w "$BIN_DIR" ]; then
+    echo "No write permission for $BIN_DIR (try running with sudo)." >&2
     exit 1
 fi
 
 # =========================
-# Download binary
+# Download
 # =========================
 
-URL="https://github.com/$REPO/releases/download/$VERSION/$BIN_DOWNLOAD_NAME"
-
-echo "Downloading $URL..."
-curl -sSL -o "$BIN_DIR/$BIN_NAME" "$URL"
-
-# =========================
-# Make executable (Linux/macOS)
-# =========================
-
-if [[ "$OS" != "windows" ]]; then
-    chmod +x "$BIN_DIR/$BIN_NAME"
+DEST="${BIN_DIR}/${BIN_NAME}${EXT}"
+echo "Downloading ${URL}"
+if ! curl -fSL -o "$DEST" "$URL"; then
+    rm -f "$DEST"
+    echo "Download failed. Check that release '${VERSION}' contains asset '${ASSET}'." >&2
+    exit 1
 fi
 
-# =========================
-# Done
-# =========================
+if [ "$OS" != "windows" ]; then
+    chmod +x "$DEST"
+fi
 
-echo "Installed $BIN_NAME successfully to $BIN_DIR"
-echo "Make sure $BIN_DIR is in your PATH"
+echo "Installed ${BIN_NAME} to ${DEST}"
+echo "Make sure ${BIN_DIR} is in your PATH."

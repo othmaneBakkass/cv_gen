@@ -10,6 +10,12 @@ import (
 	apperror "github.com/othmaneBakkass/cv_gen/internal/common/appError"
 )
 
+// Error titles reused across this package.
+const (
+	titleBadOutput = "Invalid output value"
+	titleBadInput  = "Invalid input value"
+)
+
 // EnsureDir validates and ensures a directory exists at the specified path.
 //
 // This function performs the following operations:
@@ -49,7 +55,7 @@ func EnsureDir(path string) (string, error) {
 			// Directory doesn't exist, try creating it
 			if mkdirErr := os.MkdirAll(cleanedPath, 0755); mkdirErr != nil {
 				return "", apperror.New(
-					"Invalid output value",
+					titleBadOutput,
 					fmt.Sprintf("Failed to create directory: %v", mkdirErr),
 					apperror.ErrorCodeArgs,
 					apperror.ErrorSensitivityPublic,
@@ -60,7 +66,7 @@ func EnsureDir(path string) (string, error) {
 			info, err = os.Stat(cleanedPath)
 			if err != nil {
 				return "", apperror.New(
-					"Invalid output value",
+					titleBadOutput,
 					fmt.Sprintf("Directory was created but could not be accessed: %v", err),
 					apperror.ErrorCodeArgs,
 					apperror.ErrorSensitivityPublic,
@@ -69,7 +75,7 @@ func EnsureDir(path string) (string, error) {
 
 		case os.IsPermission(err):
 			return "", apperror.New(
-				"Invalid output value",
+				titleBadOutput,
 				"Permission denied while accessing the output path",
 				apperror.ErrorCodeArgs,
 				apperror.ErrorSensitivityPublic,
@@ -77,7 +83,7 @@ func EnsureDir(path string) (string, error) {
 
 		default:
 			return "", apperror.New(
-				"Invalid output value",
+				titleBadOutput,
 				fmt.Sprintf("Unable to access output path: %v", err),
 				apperror.ErrorCodeArgs,
 				apperror.ErrorSensitivityPublic,
@@ -87,33 +93,30 @@ func EnsureDir(path string) (string, error) {
 
 	// Last element must be a directory
 	if !info.IsDir() {
-		return "", apperror.New("Invalid output value", "Output location must be a directory", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
+		return "", apperror.New(titleBadOutput, "Output location must be a directory", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
 	}
 
 	return cleanedPath, nil
 }
 
-// EnsureJSONFile validates that a JSON file exists and is accessible.
+// EnsureJSONFile validates that a JSON file exists and is readable.
 //
-// This function performs comprehensive validation of a JSON file path:
-// 1. Separates the file name from the directory path
-// 2. Ensures the parent directory exists or creates it
-// 3. Validates the file exists and is accessible
-// 4. Confirms the path points to a file (not a directory)
-// 5. Verifies the file has a .json extension
+// This function performs the following checks:
+// 1. Normalizes the input path using filepath.Clean
+// 2. Validates the file exists and is accessible
+// 3. Confirms the path points to a file (not a directory)
+// 4. Verifies the file has a .json extension
 //
-// Notes:
-// What the function does not do is validate the content of the json file
+// It does not create anything and it does not validate the file contents.
 //
 // Parameters:
-//   - path: Full path to the JSON file to validate (string)
+//   - path: Path to the JSON file to validate (string)
 //
 // Returns:
-//   - string: The cleaned, absolute path to the JSON file if valid
-//   - error: An apperror.Error if validation fails
+//   - string: The cleaned path to the JSON file if valid
+//   - error: An apperror.AppError if validation fails
 //
 // Error conditions:
-//   - Parent directory cannot be accessed or created
 //   - File does not exist at the specified path
 //   - Permission denied when accessing the file
 //   - Path points to a directory instead of a file
@@ -127,35 +130,26 @@ func EnsureDir(path string) (string, error) {
 //	}
 //	// jsonPath is now safe to use for JSON operations
 func EnsureJSONFile(path string) (string, error) {
-	var file = filepath.Base(path)
-	dir := filepath.Dir(path)
-
-	dir, err := EnsureDir(dir)
-
-	if err != nil {
-		return "", err
-	}
-
-	var cleanedPath = filepath.Join(dir, file)
+	cleanedPath := filepath.Clean(path)
 
 	// check if file exists
 	fileInfo, err := os.Stat(cleanedPath)
 
 	if err != nil {
 		if os.IsNotExist(err) {
-			return "", apperror.New("Invalid input value", "Input file does not exist", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
+			return "", apperror.New(titleBadInput, "Input file does not exist", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
 		}
 
 		if os.IsPermission(err) {
 			return "", apperror.New(
-				"Invalid input value",
+				titleBadInput,
 				"Permission denied while accessing the input path",
 				apperror.ErrorCodeArgs,
 				apperror.ErrorSensitivityPublic,
 			)
 		}
 		return "", apperror.New(
-			"Invalid input value",
+			titleBadInput,
 			fmt.Sprintf("Unable to access input path: %v", err),
 			apperror.ErrorCodeArgs,
 			apperror.ErrorSensitivityPublic,
@@ -164,51 +158,50 @@ func EnsureJSONFile(path string) (string, error) {
 
 	// check if it's a file
 	if fileInfo.IsDir() {
-		return "", apperror.New("Invalid input value", "Input location must be a file", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
+		return "", apperror.New(titleBadInput, "Input location must be a file", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
 	}
 
 	// check if it's a json file
 	if filepath.Ext(cleanedPath) != ".json" {
-		return "", apperror.New("Invalid input value", "Input file must be a json file", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
+		return "", apperror.New(titleBadInput, "Input file must be a json file", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
 	}
 
 	return cleanedPath, nil
-
 }
 
 // EnsureFileName creates a properly formatted filename with extension.
 //
 // This function handles filename normalization and fallback logic:
 // 1. Normalizes the file extension (adds leading dot if missing)
-// 2. Uses a timestamped default name if no name is provided
-// 3. Strips any existing extension from the provided name
-// 4. Appends the specified extension to create the final filename
+// 2. Strips any directory components from name (it may be user-controlled)
+// 3. Uses a timestamped default name if name is empty, "." or ".."
+// 4. Strips any existing extension from the provided name
+// 5. Appends the specified extension to create the final filename
 //
 // Parameters:
-//   - name: The desired filename (without extension). If empty, uses defaultName with timestamp
-//   - defaultName: Fallback name to use when name is empty (string)
-//   - ext: File extension to append. Leading dot is optional (string)
+//   - name: The desired filename. Directory components are removed.
+//   - defaultName: Fallback name used when name resolves to nothing usable.
+//   - ext: File extension to append. Leading dot is optional.
 //
 // Returns:
-//   - string: A properly formatted filename with the specified extension
-//
-// Behavior:
-//   - If name is empty: returns TimestampFileName(defaultName, ext)
-//   - If name has existing extension: strips it and adds the new extension
-//   - If ext doesn't start with dot: automatically adds the dot prefix
+//   - string: A bare filename (no path separators) with the given extension.
 //
 // Usage examples:
 //
-//	filename := EnsureFileName("report", "output", "pdf")     // returns "report.pdf"
-//	filename := EnsureFileName("", "backup", ".zip")         // returns "backup_20240115_143022.zip"
-//	filename := EnsureFileName("data.old", "export", "json") // returns "data.json"
+//	filename := EnsureFileName("report", "output", "pdf")     // "report.pdf"
+//	filename := EnsureFileName("", "backup", ".zip")          // "backup_20240115_143022.zip"
+//	filename := EnsureFileName("data.old", "export", "json")  // "data.json"
+//	filename := EnsureFileName("../../etc/passwd", "cv", pdf) // "passwd.pdf"
 func EnsureFileName(name, defaultName, ext string) string {
 	// Normalize extension
 	if ext != "" && ext[0] != '.' {
 		ext = "." + ext
 	}
 
-	if name == "" {
+	// Strip any directory components: the name may be user-controlled and
+	// must not be able to escape the output directory.
+	name = filepath.Base(strings.TrimSpace(name))
+	if name == "" || name == "." || name == ".." {
 		return TimestampFileName(defaultName, ext)
 	}
 
