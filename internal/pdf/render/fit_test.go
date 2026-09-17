@@ -30,7 +30,7 @@ func availableHeight(th theme.Theme) float64 {
 
 func TestFitToOnePage_FitsWithoutShrinking(t *testing.T) {
 	th := theme.T2
-	d, err := FitToOnePage(th, th.Spacing, buildNLines(10))
+	d, err := FitToOnePage(th, th.Spacing, TypographySettings{}, buildNLines(10))
 	if err != nil {
 		t.Fatalf("FitToOnePage: %v", err)
 	}
@@ -63,7 +63,7 @@ func TestFitToOnePage_ShrinksToFit(t *testing.T) {
 		t.Fatalf("test premise broken: n=%d already fits unscaled (used %v, available %v) — increase n", n, used, availableHeight(th))
 	}
 
-	d, err := FitToOnePage(th, th.Spacing, build)
+	d, err := FitToOnePage(th, th.Spacing, TypographySettings{}, build)
 	if err != nil {
 		t.Fatalf("FitToOnePage: %v", err)
 	}
@@ -81,7 +81,7 @@ func TestFitToOnePage_ShrinksToFit(t *testing.T) {
 func TestFitToOnePage_GivesUpGracefullyAtFloor(t *testing.T) {
 	th := theme.T2
 	// Way more content than fitFloor could ever reclaim.
-	d, err := FitToOnePage(th, th.Spacing, buildNLines(100))
+	d, err := FitToOnePage(th, th.Spacing, TypographySettings{}, buildNLines(100))
 	if err != nil {
 		t.Fatalf("FitToOnePage should not error even when content can't fit: %v", err)
 	}

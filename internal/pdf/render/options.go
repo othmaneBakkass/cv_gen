@@ -43,48 +43,81 @@ type Options struct {
 	// means "keep the template's default for that color".
 	Colors ColorOverride
 
+	// MetaSep overrides the separator between entry title and meta fields
+	// (e.g. "  —  " or ": "). Empty string means "keep the theme default".
+	MetaSep string
+
+	// NoHeaderRule suppresses the rule drawn under the header block when true.
+	NoHeaderRule bool
+
 	// SectionStyle holds per-section style overrides keyed by section. These
 	// are the user-facing (JSON/CLI) layer of Global Template Defaults ->
 	// Section Overrides -> Rendered Section, applied on top of the
 	// template's own Section.Style in RunSections. A missing key means the
 	// section keeps the template's styling.
 	SectionStyle map[SectionKey]theme.SectionOverride
+
+	// Typography holds font-size overrides and adaptive scaling parameters
+	// for semantic text elements. Used by adaptive density to scale fonts
+	// down while respecting minimums.
+	Typography TypographySettings
+}
+
+// TypographySettings holds the user-configured typography overrides from JSON.
+// Each field maps to a semantic text element and includes size, minSize, and
+// scaleStep for adaptive density.
+type TypographySettings struct {
+	Name        *TypographyElement
+	Subtitle    *TypographyElement
+	Contact     *TypographyElement
+	Heading     *TypographyElement
+	RoleTitle   *TypographyElement
+	Company     *TypographyElement
+	Date        *TypographyElement
+	StackLabel  *TypographyElement
+	StackValue  *TypographyElement
+	Body        *TypographyElement
+	SkillsKey   *TypographyElement
+	SkillsValue *TypographyElement
+}
+
+// TypographyElement configures one semantic text element's typography.
+type TypographyElement struct {
+	Size      *float64
+	MinSize   *float64
+	ScaleStep *float64
 }
 
 // ColorOverride holds optional replacements for the theme's semantic
 // palette roles. A nil field leaves the template's own value in place. It
 // mirrors theme.Palette's roles; the older accent/grey/muted/ink names are
-// accepted at the JSON/CLI boundary (see cmd/generate) and mapped onto
-// these before reaching here.
+// no longer accepted at the JSON/CLI boundary — v2 uses semantic roles only.
 type ColorOverride struct {
 	Headline    *theme.RGB
 	Subheadline *theme.RGB
 	Body        *theme.RGB
-	Metadata    *theme.RGB
 	Link        *theme.RGB
 	Border      *theme.RGB
-	Profile     *theme.RGB
 	Background  *theme.RGB
 }
 
-// ApplyTheme returns th with any set global Colors overrides applied. Every
-// template calls this on its own base theme (theme.T1/T2/T3) before
-// passing the result to draw.New, so a JSON- or CLI-supplied color
-// override works identically regardless of which template is selected. It
-// reuses theme.With for the palette roles it shares, then applies
-// Background (which is not part of a per-section override).
+// ApplyTheme returns th with any set global Colors and MetaSep overrides applied.
 func (o Options) ApplyTheme(th theme.Theme) theme.Theme {
 	th = th.With(theme.SectionOverride{
 		Headline:    o.Colors.Headline,
 		Subheadline: o.Colors.Subheadline,
 		Body:        o.Colors.Body,
-		Metadata:    o.Colors.Metadata,
 		Link:        o.Colors.Link,
 		Border:      o.Colors.Border,
-		Profile:     o.Colors.Profile,
 	})
 	if o.Colors.Background != nil {
 		th.Palette.Background = *o.Colors.Background
+	}
+	if o.MetaSep != "" {
+		th.MetaSep = o.MetaSep
+	}
+	if o.NoHeaderRule {
+		th.HeaderRuleWeight = 0
 	}
 	return th
 }

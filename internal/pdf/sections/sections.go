@@ -18,15 +18,16 @@ import (
 )
 
 // Education draws each entry as a title/meta/date EntryLine followed by an
-// optional description paragraph.
+// optional description paragraph. School is in the left meta field;
+// location and date range are combined on the right.
 func Education(d *draw.Doc, entries []schema.Education, labels i18n.Labels) error {
 	for i, e := range entries {
 		if i > 0 {
 			d.Space(d.Spacing.MD)
 		}
 		title := stringc.ToCapital(e.Degree)
-		meta := fmt.Sprintf("%s, %s", e.School, e.Location)
-		dateRange := e.StartedAt + labels.DateSep + e.EndedAt
+		meta := e.School
+		dateRange := e.Location + "  ·  " + e.StartedAt + labels.DateSep + e.EndedAt
 		if err := comp.EntryLine(d, title, meta, dateRange); err != nil {
 			return err
 		}
@@ -41,15 +42,16 @@ func Education(d *draw.Doc, entries []schema.Education, labels i18n.Labels) erro
 }
 
 // Jobs draws each entry as a title/meta/date EntryLine, an optional Stack
-// line, then a bullet list of highlights.
+// line, then a bullet list of highlights. Location is shown next to the
+// date on the right; title and company are on the left.
 func Jobs(d *draw.Doc, entries []schema.Job, labels i18n.Labels) error {
 	for i, j := range entries {
 		if i > 0 {
-			d.Space(d.Spacing.MD)
+			d.Space(d.Spacing.LG)
 		}
 		title := stringc.ToCapital(j.Position)
-		meta := fmt.Sprintf("%s, %s", stringc.ToCapital(j.Company), j.Location)
-		dateRange := j.StartedAt + labels.DateSep + j.EndedAt
+		meta := stringc.ToCapital(j.Company)
+		dateRange := j.Location + "  ·  " + j.StartedAt + labels.DateSep + j.EndedAt
 		if err := comp.EntryLine(d, title, meta, dateRange); err != nil {
 			return err
 		}

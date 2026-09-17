@@ -61,7 +61,7 @@ func init() {
 	command.Flags().StringP("output", "o", ".", "Directory where generated files are written (default: current directory).")
 	command.Flags().StringP("input", "i", "", "Path to the JSON data file (required).")
 	command.Flags().Bool("french", false, "Render section labels in French instead of English.")
-	command.Flags().String("density", "normal", "Spacing density: dense, normal, or airy.")
+	command.Flags().String("density", "normal", "Spacing density: dense, normal, airy, or adaptive (auto-fit to one page).")
 	command.Flags().String("template", "", fmt.Sprintf("Override the template for every entry (%s). Default: use each entry's own \"template\" field.", strings.Join(templates.Names(), ", ")))
 	for _, t := range sectionToggleFlags {
 		command.Flags().Bool(t.flag, false, fmt.Sprintf("Omit the %s section even if present in the data.", t.key))
@@ -115,7 +115,7 @@ func applyCLIOverrides(cmd *cobra.Command, opts render.Options) (render.Options,
 		}
 		mult, ok := settings.DensityMultipliers[density]
 		if !ok {
-			return opts, apperror.New(titleBadInput, "density must be one of: dense, normal, airy", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
+			return opts, apperror.New(titleBadInput, "density must be one of: dense, normal, airy, adaptive", apperror.ErrorCodeArgs, apperror.ErrorSensitivityPublic)
 		}
 		opts.Density = mult
 	}

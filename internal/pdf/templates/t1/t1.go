@@ -22,8 +22,8 @@ import (
 
 // Render builds the t1 layout for cv under opts and returns the finished
 // PDF bytes. The whole layout is built through render.FitToOnePage, which
-// re-runs it against progressively tighter spacing until it fits on one
-// page (or gives up at a floor and lets it spill onto a second).
+// re-runs it against progressively tighter spacing (and optionally font sizes)
+// until it fits on one page.
 func Render(cv schema.CV, opts render.Options) ([]byte, error) {
 	th := opts.EffectiveMargins(opts.ApplyTheme(theme.T1))
 	labels := i18n.For(opts.Lang)
@@ -32,7 +32,7 @@ func Render(cv schema.CV, opts render.Options) ([]byte, error) {
 		return renderBody(d, cv, opts, labels)
 	}
 
-	d, err := render.FitToOnePage(th, opts.EffectiveSpacing(th.Spacing), build)
+	d, err := render.FitToOnePage(th, opts.EffectiveSpacing(th.Spacing), opts.Typography, build)
 	if err != nil {
 		return nil, err
 	}

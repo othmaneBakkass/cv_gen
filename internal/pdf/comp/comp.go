@@ -66,7 +66,7 @@ func Header(d *draw.Doc, h schema.Head) error {
 	}
 
 	if len(h.Specialties) > 0 {
-		if err := d.Paragraph(strings.Join(h.Specialties, bulletSep), draw.TextRun{Size: th.ContactSize, Color: th.Palette.Metadata}, 0); err != nil {
+		if err := d.Paragraph(strings.Join(h.Specialties, bulletSep), draw.TextRun{Size: th.ContactSize, Color: th.Palette.Body}, 0); err != nil {
 			return err
 		}
 	}
@@ -78,10 +78,10 @@ func Header(d *draw.Doc, h schema.Head) error {
 
 	var links []string
 	if h.LinkedIn != "" {
-		links = append(links, "LinkedIn: "+h.LinkedIn)
+		links = append(links, h.LinkedIn)
 	}
 	if h.GitHub != "" {
-		links = append(links, "GitHub: "+h.GitHub)
+		links = append(links, h.GitHub)
 	}
 	if len(links) > 0 {
 		if err := d.Paragraph(strings.Join(links, pipeSep), draw.TextRun{Size: th.ContactSize, Color: th.Palette.Link}, 0); err != nil {
@@ -121,21 +121,31 @@ func SectionHeading(d *draw.Doc, label string) error {
 // decides they'd collide and drops meta to its own line instead.
 const entryLineGap = 8.0
 
-// EntryLine draws "Title — Meta" on the left and a right-aligned date
+// entryMetaSep returns the configured meta separator for this doc, falling
+// back to an em-dash if the theme has none set.
+func entryMetaSep(d *draw.Doc) string {
+	if d.Theme.MetaSep != "" {
+		return d.Theme.MetaSep
+	}
+	return "  —  "
+}
+
+// EntryLine draws "Title <sep> Meta" on the left and a right-aligned date
 // range, all on one shared baseline. Used for both experience and
 // education entries. If title+meta is long enough that it would collide
 // with the date, meta drops to a plain line below instead of overlapping
 // it — title and date always keep their own baseline.
 func EntryLine(d *draw.Doc, title, meta, dateRange string) error {
 	th := d.Theme
+	sep := entryMetaSep(d)
 	titleRun := draw.TextRun{Text: title, Size: th.RoleTitleSize, Style: draw.Bold, Color: th.Palette.Body}
-	dateRun := draw.TextRun{Text: dateRange, Size: th.DateSize, Style: dateStyle(d), Color: th.Palette.Metadata}
+	dateRun := draw.TextRun{Text: dateRange, Size: th.DateSize, Style: dateStyle(d), Color: th.Palette.Body}
 
 	if meta == "" {
 		return d.LineWithTail([]draw.TextRun{titleRun}, []draw.TextRun{dateRun})
 	}
 
-	metaRun := draw.TextRun{Text: "  —  " + meta, Size: th.CompanySize, Color: th.Palette.Metadata}
+	metaRun := draw.TextRun{Text: sep + meta, Size: th.CompanySize, Style: draw.Bold, Color: th.Palette.Body}
 	titleW, err := d.MeasureRun(titleRun)
 	if err != nil {
 		return err
@@ -156,17 +166,23 @@ func EntryLine(d *draw.Doc, title, meta, dateRange string) error {
 	if err := d.LineWithTail([]draw.TextRun{titleRun}, []draw.TextRun{dateRun}); err != nil {
 		return err
 	}
-	return d.Line([]draw.TextRun{{Text: meta, Size: th.CompanySize, Color: th.Palette.Metadata}})
+	return d.Line([]draw.TextRun{{Text: meta, Size: th.CompanySize, Style: draw.Bold, Color: th.Palette.Body}})
 }
 
-// StackLine draws the bold, accent "Stack:" label followed by a grey
-// value.
+// StackLine draws the bold, accent "Stack:" label followed by a value that
+// wraps onto continuation lines when it is too long to fit on one line.
+// Wrapped lines are indented to the start of the value (after the label).
 func StackLine(d *draw.Doc, label, value string) error {
 	th := d.Theme
-	return d.Line([]draw.TextRun{
-		{Text: label, Size: th.StackLabelSize, Style: draw.Bold, Color: th.Palette.Headline},
-		{Text: value, Size: th.StackValueSize, Style: dateStyle(d), Color: th.Palette.Metadata},
-	})
+	labelRun := draw.TextRun{Text: label, Size: th.StackLabelSize, Style: draw.Bold, Color: th.Palette.Headline}
+	valueRun := draw.TextRun{Text: value, Size: th.StackValueSize, Style: dateStyle(d), Color: th.Palette.Body}
+	labelW, err := d.MeasureRun(labelRun)
+	if err != nil {
+		return err
+	}
+	// RunsParagraph handles wrapping; the label is drawn as a hanging
+	// "marker" so wrapped lines start under the value, not the label.
+	return d.RunsParagraph([]draw.TextRun{valueRun}, labelW, label, labelRun, 0)
 }
 
 // BulletList draws each item as a single-style bulleted, hanging-indent
@@ -248,7 +264,7 @@ func Profile(d *draw.Doc, summary string) error {
 	if d.Theme.ProfileItalic {
 		style = draw.Italic
 	}
-	return d.Paragraph(summary, draw.TextRun{Size: d.Theme.BodySize, Style: style, Color: d.Theme.Palette.Profile}, 0)
+	return d.Paragraph(summary, draw.TextRun{Size: d.Theme.BodySize, Style: style, Color: d.Theme.Palette.Body}, 0)
 }
 
 func nonEmpty(ss []string) []string {

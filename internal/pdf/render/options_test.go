@@ -88,8 +88,7 @@ func TestApplyTheme(t *testing.T) {
 		t.Errorf("ApplyTheme: Palette.Headline = %+v, want override %+v", got.Palette.Headline, red)
 	}
 	// Every other palette role must be untouched.
-	if got.Palette.Body != base.Palette.Body || got.Palette.Metadata != base.Palette.Metadata ||
-		got.Palette.Profile != base.Palette.Profile || got.Palette.Border != base.Palette.Border ||
+	if got.Palette.Body != base.Palette.Body || got.Palette.Border != base.Palette.Border ||
 		got.Palette.Subheadline != base.Palette.Subheadline || got.Palette.Link != base.Palette.Link {
 		t.Errorf("ApplyTheme changed a color that had no override: got %+v, base %+v", got.Palette, base.Palette)
 	}

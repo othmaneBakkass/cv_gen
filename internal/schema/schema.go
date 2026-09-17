@@ -47,13 +47,54 @@ type Settings struct {
 	// Lang selects the template's own label language: "en" or "fr". Does
 	// not translate your content, only headings/labels like "Stack:".
 	Lang string `json:"lang,omitempty" validate:"omitempty,oneof=en fr"`
-	// Density scales the template's spacing: "dense", "normal", or "airy".
-	Density string `json:"density,omitempty" validate:"omitempty,oneof=dense normal airy"`
+	// Density scales the template's spacing: "dense", "normal", "airy", or "adaptive".
+	// "adaptive" lets the renderer automatically tighten spacing until the CV
+	// fits on one page.
+	Density string `json:"density,omitempty" validate:"omitempty,oneof=dense normal airy adaptive"`
 	// Sections controls per-section visibility and render order.
 	Sections *SectionSettings `json:"sections,omitempty"`
 	// Colors overrides the template's palette. Omit any field to keep the
 	// template's default for that color.
 	Colors *ColorSettings `json:"colors,omitempty"`
+	// MetaSep overrides the separator between an entry's title and its meta
+	// field (e.g. "  —  " or ": "). Omit to keep the template default.
+	MetaSep string `json:"metaSep,omitempty"`
+	// HeaderRule controls whether the rule under the header block is drawn.
+	// Set to false to remove it. Omit to keep the template's default (true).
+	HeaderRule *bool `json:"headerRule,omitempty"`
+	// Typography overrides font sizes and adaptive scaling parameters for
+	// semantic text elements. Omit any element to keep the template's default.
+	Typography *TypographySettings `json:"typography,omitempty"`
+}
+
+// TypographySettings holds typography overrides for semantic text elements.
+// Each element can have its size, minimum size, and scaling step configured.
+type TypographySettings struct {
+	Name       *TypographyElement `json:"name,omitempty"`
+	Subtitle   *TypographyElement `json:"subtitle,omitempty"`
+	Contact    *TypographyElement `json:"contact,omitempty"`
+	Heading    *TypographyElement `json:"heading,omitempty"`
+	RoleTitle  *TypographyElement `json:"roleTitle,omitempty"`
+	Company    *TypographyElement `json:"company,omitempty"`
+	Date       *TypographyElement `json:"date,omitempty"`
+	StackLabel *TypographyElement `json:"stackLabel,omitempty"`
+	StackValue *TypographyElement `json:"stackValue,omitempty"`
+	Body       *TypographyElement `json:"body,omitempty"`
+	SkillsKey  *TypographyElement `json:"skillsKey,omitempty"`
+	SkillsValue *TypographyElement `json:"skillsValue,omitempty"`
+}
+
+// TypographyElement configures one semantic text element's typography.
+// Size overrides the template default; MinSize and ScaleStep control
+// adaptive density behavior.
+type TypographyElement struct {
+	// Size is the default font size in points. Overrides the template's default.
+	Size *float64 `json:"size,omitempty" validate:"omitempty,gt=0"`
+	// MinSize is the minimum font size adaptive mode won't go below.
+	MinSize *float64 `json:"minSize,omitempty" validate:"omitempty,gt=0"`
+	// ScaleStep is how much to reduce font size per adaptive iteration (points).
+	// Default is 0.25 if not set.
+	ScaleStep *float64 `json:"scaleStep,omitempty" validate:"omitempty,gt=0"`
 }
 
 // SectionSettings holds one SectionSetting per optional/orderable section.
@@ -92,6 +133,9 @@ type SectionStyle struct {
 	SpaceBefore *float64 `json:"spaceBefore,omitempty"`
 	// Uppercase overrides whether this section's heading is upper-cased.
 	Uppercase *bool `json:"uppercase,omitempty"`
+	// MetaSep overrides the separator between an entry's title and meta field
+	// for this section only (e.g. "  —  " or ": ").
+	MetaSep string `json:"metaSep,omitempty"`
 	// Colors overrides individual palette roles for this section only. Same
 	// shape (and same semantic-vs-alias rules) as the global Settings.Colors.
 	Colors *ColorSettings `json:"colors,omitempty"`
@@ -101,30 +145,13 @@ type SectionStyle struct {
 // theme.Palette). Each value is a hex color, e.g. "#1F3864" (the "#" is
 // optional). Every field is independent — set only the roles you want to
 // change; the rest keep the template's default.
-//
-// The four deprecated fields (Accent/Grey/Muted/Ink) are the original
-// palette API, kept working so existing input files don't break. They map
-// onto the semantic roles as: accent -> headline + border, grey ->
-// metadata, muted -> profile, ink -> body. If both an alias and its
-// semantic equivalent are set, the semantic value wins (see
-// cmd/generate.colorOverrideFromSettings).
 type ColorSettings struct {
-	// Semantic role names — preferred.
 	Headline    string `json:"headline,omitempty" validate:"omitempty,hexcolor"`
 	Subheadline string `json:"subheadline,omitempty" validate:"omitempty,hexcolor"`
 	Body        string `json:"body,omitempty" validate:"omitempty,hexcolor"`
-	Metadata    string `json:"metadata,omitempty" validate:"omitempty,hexcolor"`
 	Link        string `json:"link,omitempty" validate:"omitempty,hexcolor"`
 	Border      string `json:"border,omitempty" validate:"omitempty,hexcolor"`
-	Profile     string `json:"profile,omitempty" validate:"omitempty,hexcolor"`
 	Background  string `json:"background,omitempty" validate:"omitempty,hexcolor"`
-
-	// Deprecated aliases (original four-color API). Prefer the semantic
-	// roles above; these are retained for backward compatibility.
-	Accent string `json:"accent,omitempty" validate:"omitempty,hexcolor"`
-	Grey   string `json:"grey,omitempty" validate:"omitempty,hexcolor"`
-	Muted  string `json:"muted,omitempty" validate:"omitempty,hexcolor"`
-	Ink    string `json:"ink,omitempty" validate:"omitempty,hexcolor"`
 }
 
 // Head holds the contact block shown at the top of the CV. FullName,

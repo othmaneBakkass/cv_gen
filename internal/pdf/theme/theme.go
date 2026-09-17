@@ -53,11 +53,9 @@ func ParseHex(s string) (RGB, error) {
 type Palette struct {
 	Headline    RGB // section headings, the name, the "Stack:" label — structural emphasis
 	Subheadline RGB // the tagline/role line under the name
-	Body        RGB // body copy, entry titles, bullets, skills, contact line
-	Metadata    RGB // dates, company/school, specialties, stack value — secondary info
+	Body        RGB // body copy, profile text, entry titles, bullets, skills, contact line
 	Link        RGB // hyperlinks (LinkedIn/GitHub)
 	Border      RGB // header and section rules / dividers
-	Profile     RGB // the profile/summary paragraph — its own, paler tone
 	Background  RGB // page background (drawn only when not white)
 }
 
@@ -139,6 +137,10 @@ type Theme struct {
 	// SkillsGap is the space between a skills-row key and its value.
 	SkillsGap float64
 
+	// MetaSep is the separator placed between the title and the meta field
+	// in entry lines (e.g. "  —  " or ": "). Defaults to "  —  ".
+	MetaSep string
+
 	// Spacing is this theme's base vertical rhythm before any density
 	// adjustment (see Spacing.Scaled and render.Options.Density).
 	Spacing Spacing
@@ -156,10 +158,8 @@ type SectionOverride struct {
 	Headline    *RGB
 	Subheadline *RGB
 	Body        *RGB
-	Metadata    *RGB
 	Link        *RGB
 	Border      *RGB
-	Profile     *RGB
 
 	// ShowDivider, when set to false, suppresses this section's rule (it maps
 	// to a zero SectionRuleWeight, which draw.Rule renders as nothing) — the
@@ -173,9 +173,31 @@ type SectionOverride struct {
 	HeadingSize      *float64
 	BodySize         *float64
 
+	// MetaSep overrides the separator between entry title and meta fields.
+	// Empty string means "keep the theme default".
+	MetaSep *string
+
 	// SpaceBefore overrides the vertical gap render.RunSections inserts
 	// before this section (read there, not applied by With).
 	SpaceBefore *float64
+}
+
+// TypographyOverride holds font-size overrides for all semantic text elements.
+// Used by adaptive density to scale fonts down while respecting minimums.
+// A nil pointer means "keep the current value".
+type TypographyOverride struct {
+	NameSize        *float64
+	SubtitleSize    *float64
+	ContactSize     *float64
+	HeadingSize     *float64
+	RoleTitleSize   *float64
+	CompanySize     *float64
+	DateSize        *float64
+	StackLabelSize  *float64
+	StackValueSize  *float64
+	BodySize        *float64
+	SkillsKeySize   *float64
+	SkillsValueSize *float64
 }
 
 // With returns a copy of t with o's set fields applied. Colors land on the
@@ -186,10 +208,8 @@ func (t Theme) With(o SectionOverride) Theme {
 	applyRGB(&t.Palette.Headline, o.Headline)
 	applyRGB(&t.Palette.Subheadline, o.Subheadline)
 	applyRGB(&t.Palette.Body, o.Body)
-	applyRGB(&t.Palette.Metadata, o.Metadata)
 	applyRGB(&t.Palette.Link, o.Link)
 	applyRGB(&t.Palette.Border, o.Border)
-	applyRGB(&t.Palette.Profile, o.Profile)
 
 	if o.ShowDivider != nil && !*o.ShowDivider {
 		t.SectionRuleWeight = 0
@@ -206,6 +226,9 @@ func (t Theme) With(o SectionOverride) Theme {
 	if o.BodySize != nil {
 		t.BodySize = *o.BodySize
 	}
+	if o.MetaSep != nil {
+		t.MetaSep = *o.MetaSep
+	}
 	return t
 }
 
@@ -215,23 +238,53 @@ func applyRGB(dst *RGB, src *RGB) {
 	}
 }
 
+// ApplyTypography returns a copy of t with ty's set fields applied.
+// Used by adaptive density to progressively scale font sizes.
+func (t Theme) ApplyTypography(ty TypographyOverride) Theme {
+	if ty.NameSize != nil {
+		t.NameSize = *ty.NameSize
+	}
+	if ty.SubtitleSize != nil {
+		t.SubtitleSize = *ty.SubtitleSize
+	}
+	if ty.ContactSize != nil {
+		t.ContactSize = *ty.ContactSize
+	}
+	if ty.HeadingSize != nil {
+		t.HeadingSize = *ty.HeadingSize
+	}
+	if ty.RoleTitleSize != nil {
+		t.RoleTitleSize = *ty.RoleTitleSize
+	}
+	if ty.CompanySize != nil {
+		t.CompanySize = *ty.CompanySize
+	}
+	if ty.DateSize != nil {
+		t.DateSize = *ty.DateSize
+	}
+	if ty.StackLabelSize != nil {
+		t.StackLabelSize = *ty.StackLabelSize
+	}
+	if ty.StackValueSize != nil {
+		t.StackValueSize = *ty.StackValueSize
+	}
+	if ty.BodySize != nil {
+		t.BodySize = *ty.BodySize
+	}
+	if ty.SkillsKeySize != nil {
+		t.SkillsKeySize = *ty.SkillsKeySize
+	}
+	if ty.SkillsValueSize != nil {
+		t.SkillsValueSize = *ty.SkillsValueSize
+	}
+	return t
+}
+
 // white is the default page background — pure white, never off-white/cream.
 var white = RGB{255, 255, 255}
 
 // T2 is the "Navy Rule" theme: editorial, teal-accented, tracked uppercase
-// headings, italic dates. Colors are pixel-sampled from the owner's
-// reference mockups (Templates.claude/*.pdf); type sizes and rule weights
-// are read directly off the mockups' own PDF operators (Tf font-size args
-// and the drawn rule rectangles' geometry — no pixel measurement needed
-// for either, since both are literal numbers in the content stream).
-//
-// Verified against all three mockups (CV_Template.pdf "dense",
-// CV_Template_Airy.pdf, CV_Template_ATS_NoPhoto.pdf) — see git history on
-// this file for the pdfDesign.md-derived values these replaced. The palette
-// keeps Headline and Border on the same teal the mockups use for both the
-// name/headings and the rules; Profile is the paler tone the mockups use
-// for the summary paragraph, kept as its own semantic role rather than a
-// generic "muted" tier.
+// headings, italic dates.
 var T2 = Theme{
 	Name:       "t2-navy-rule",
 	FontFamily: "Carlito",
@@ -240,11 +293,8 @@ var T2 = Theme{
 		Headline:    RGB{31, 86, 115},
 		Subheadline: RGB{26, 26, 26},
 		Body:        RGB{26, 26, 26},
-		Metadata:    RGB{90, 107, 117},
 		Link:        RGB{26, 26, 26},
 		Border:      RGB{31, 86, 115},
-		Profile:     RGB{138, 150, 158},
-		Background:  white,
 	},
 
 	NameSize:        20.0,
@@ -279,6 +329,7 @@ var T2 = Theme{
 	BulletOffset:        3.0,
 	BulletMarker:        "•",
 	SkillsGap:           4.0,
+	MetaSep:             "  —  ",
 
 	Spacing: Spacing{XS: 1.5, SM: 3.0, MD: 7.0, LG: 12.0},
 }
@@ -296,14 +347,11 @@ var T1 = Theme{
 	FontFamily: "Carlito",
 
 	Palette: Palette{
-		Headline:    RGB{31, 56, 100}, // #1F3864, conventional corporate navy
+		Headline:    RGB{31, 56, 100},
 		Subheadline: RGB{26, 26, 26},
 		Body:        RGB{26, 26, 26},
-		Metadata:    RGB{90, 90, 90}, // neutral grey, not blue-tinted
 		Link:        RGB{26, 26, 26},
 		Border:      RGB{31, 56, 100},
-		Profile:     RGB{140, 140, 140},
-		Background:  white,
 	},
 
 	NameSize:        18.0,
@@ -338,6 +386,7 @@ var T1 = Theme{
 	BulletOffset:        3.0,
 	BulletMarker:        "•",
 	SkillsGap:           4.0,
+	MetaSep:             "  —  ",
 
 	Spacing: Spacing{XS: 2.0, SM: 3.5, MD: 8.0, LG: 13.0},
 }
@@ -353,14 +402,11 @@ var T3 = Theme{
 	FontFamily: "Carlito",
 
 	Palette: Palette{
-		Headline:    RGB{55, 48, 163}, // modern indigo
+		Headline:    RGB{55, 48, 163},
 		Subheadline: RGB{23, 23, 23},
 		Body:        RGB{23, 23, 23},
-		Metadata:    RGB{100, 100, 105},
-		Link:        RGB{55, 48, 163}, // links pick up the indigo in this contemporary theme
+		Link:        RGB{55, 48, 163},
 		Border:      RGB{55, 48, 163},
-		Profile:     RGB{150, 150, 158},
-		Background:  white,
 	},
 
 	NameSize:        19.0,
@@ -395,6 +441,7 @@ var T3 = Theme{
 	BulletOffset:        3.0,
 	BulletMarker:        "–", // en dash, not a round bullet
 	SkillsGap:           4.0,
+	MetaSep:             "  —  ",
 
 	Spacing: Spacing{XS: 1.2, SM: 2.5, MD: 6.0, LG: 10.0},
 }

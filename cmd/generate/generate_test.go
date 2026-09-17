@@ -52,7 +52,7 @@ func TestOptionsFromSettings_Full(t *testing.T) {
 			Skills:   &schema.SectionSetting{Priority: &priority},
 			Projects: &schema.SectionSetting{Include: &include},
 		},
-		Colors: &schema.ColorSettings{Accent: "#8B0000"},
+		Colors: &schema.ColorSettings{Headline: "#8B0000", Border: "#8B0000"},
 	}
 
 	opts, err := optionsFromSettings(s)
@@ -71,14 +71,13 @@ func TestOptionsFromSettings_Full(t *testing.T) {
 	if include, ok := opts.IncludeOverride(render.Projects); !ok || !include {
 		t.Errorf("Projects include override = (%v, %v), want (true, true)", include, ok)
 	}
-	// The deprecated "accent" alias fans out to both the Headline and Border
-	// semantic roles (accent historically drove headings and rules alike).
+	// Both Headline and Border are explicitly set to the same value.
 	want := theme.RGB{R: 139, G: 0, B: 0}
 	if opts.Colors.Headline == nil || *opts.Colors.Headline != want {
-		t.Errorf("Colors.Headline = %v, want %+v (from accent alias)", opts.Colors.Headline, want)
+		t.Errorf("Colors.Headline = %v, want %+v", opts.Colors.Headline, want)
 	}
 	if opts.Colors.Border == nil || *opts.Colors.Border != want {
-		t.Errorf("Colors.Border = %v, want %+v (from accent alias)", opts.Colors.Border, want)
+		t.Errorf("Colors.Border = %v, want %+v", opts.Colors.Border, want)
 	}
 }
 
@@ -116,12 +115,10 @@ func TestSectionStyleFromSettings(t *testing.T) {
 	}
 }
 
-// TestColorSettings_SemanticWinsOverAlias proves that when both a deprecated
-// alias and its semantic equivalent are supplied, the semantic value wins.
-func TestColorSettings_SemanticWinsOverAlias(t *testing.T) {
+// TestColorSettings_BodyColor proves that the body color setting is applied correctly.
+func TestColorSettings_BodyColor(t *testing.T) {
 	s := &schema.Settings{Colors: &schema.ColorSettings{
-		Ink:  "#111111", // alias for body
-		Body: "#222222", // semantic — should win
+		Body: "#222222",
 	}}
 	opts, err := optionsFromSettings(s)
 	if err != nil {
@@ -129,7 +126,7 @@ func TestColorSettings_SemanticWinsOverAlias(t *testing.T) {
 	}
 	want := theme.RGB{R: 0x22, G: 0x22, B: 0x22}
 	if opts.Colors.Body == nil || *opts.Colors.Body != want {
-		t.Errorf("Colors.Body = %v, want %+v (semantic key should beat the ink alias)", opts.Colors.Body, want)
+		t.Errorf("Colors.Body = %v, want %+v", opts.Colors.Body, want)
 	}
 }
 
@@ -141,9 +138,9 @@ func TestOptionsFromSettings_InvalidDensity(t *testing.T) {
 }
 
 func TestOptionsFromSettings_InvalidColor(t *testing.T) {
-	s := &schema.Settings{Colors: &schema.ColorSettings{Accent: "not-a-color"}}
+	s := &schema.Settings{Colors: &schema.ColorSettings{Headline: "not-a-color"}}
 	if _, err := optionsFromSettings(s); err == nil {
-		t.Error("expected an error for an invalid settings.colors.accent value")
+		t.Error("expected an error for an invalid settings.colors.headline value")
 	}
 }
 

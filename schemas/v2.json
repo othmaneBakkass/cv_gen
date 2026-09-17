@@ -1,0 +1,321 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CV Gen Schema",
+  "type": "object",
+
+  "required": ["data"],
+
+  "properties": {
+    "data": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/cv" }
+    }
+  },
+
+  "definitions": {
+
+    "cv": {
+      "type": "object",
+      "required": [
+        "template",
+        "fileName",
+        "head",
+        "education",
+        "jobs",
+        "languages"
+      ],
+      "properties": {
+        "template": {
+          "type": "string",
+          "enum": ["t1", "t2", "t3"]
+        },
+
+        "fileName": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "head": {
+          "$ref": "#/definitions/head"
+        },
+
+        "profile": {
+          "type": "string"
+        },
+
+        "education": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/education" }
+        },
+
+        "jobs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/job" }
+        },
+
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/language" }
+        },
+
+        "skills": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/skillGroup" }
+        },
+
+        "projects": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/project" }
+        },
+
+        "certifications": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+
+        "settings": {
+          "$ref": "#/definitions/settings"
+        }
+      }
+    },
+
+    "head": {
+      "type": "object",
+      "required": [
+        "fullName",
+        "address",
+        "phone",
+        "email"
+      ],
+      "properties": {
+        "fullName": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "jobTitle": { "type": "string" },
+        "specialties": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "linkedin": { "type": "string" },
+        "github": { "type": "string" },
+        "photo": { "type": "string" }
+      }
+    },
+
+    "education": {
+      "type": "object",
+      "required": [
+        "school",
+        "location",
+        "startedAt",
+        "endedAt",
+        "degree",
+        "description"
+      ],
+      "properties": {
+        "school": { "type": "string" },
+        "location": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "endedAt": { "type": "string" },
+        "degree": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+
+    "job": {
+      "type": "object",
+      "required": [
+        "company",
+        "location",
+        "position",
+        "startedAt",
+        "endedAt",
+        "tools",
+        "highlights"
+      ],
+      "properties": {
+        "company": { "type": "string" },
+        "location": { "type": "string" },
+        "position": { "type": "string" },
+        "startedAt": { "type": "string" },
+        "endedAt": { "type": "string" },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "highlights": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "language": {
+      "type": "object",
+      "required": ["language", "level"],
+      "properties": {
+        "language": { "type": "string" },
+        "level": { "type": "string" }
+      }
+    },
+
+    "skillGroup": {
+      "type": "object",
+      "required": ["category", "items"],
+      "properties": {
+        "category": { "type": "string" },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        }
+      }
+    },
+
+    "project": {
+      "type": "object",
+      "required": ["name", "tech", "description"],
+      "properties": {
+        "name": { "type": "string" },
+        "tech": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+
+    "settings": {
+      "type": "object",
+      "properties": {
+        "lang": {
+          "type": "string",
+          "enum": ["en", "fr"]
+        },
+
+        "density": {
+          "type": "string",
+          "enum": [
+            "dense",
+            "normal",
+            "airy",
+            "adaptive"
+          ]
+        },
+
+        "sections": {
+          "$ref": "#/definitions/sectionSettings"
+        },
+
+        "colors": {
+          "$ref": "#/definitions/colors"
+        },
+
+        "metaSep": {
+          "type": "string",
+          "description": "Separator between an entry's title and its meta field. Default: '  —  '. Use ': ' for a colon-style separator."
+        },
+
+        "headerRule": {
+          "type": "boolean",
+          "description": "Whether to draw the rule under the header block. Set to false to remove it. Default: true."
+        },
+
+        "typography": {
+          "$ref": "#/definitions/typography"
+        }
+      }
+    },
+
+    "sectionSettings": {
+      "type": "object",
+      "properties": {
+        "profile": { "$ref": "#/definitions/sectionSetting" },
+        "education": { "$ref": "#/definitions/sectionSetting" },
+        "experience": { "$ref": "#/definitions/sectionSetting" },
+        "skills": { "$ref": "#/definitions/sectionSetting" },
+        "projects": { "$ref": "#/definitions/sectionSetting" },
+        "certifications": { "$ref": "#/definitions/sectionSetting" },
+        "languages": { "$ref": "#/definitions/sectionSetting" }
+      }
+    },
+
+    "sectionSetting": {
+      "type": "object",
+      "properties": {
+        "include": { "type": "boolean" },
+        "priority": { "type": "integer" },
+        "style": { "$ref": "#/definitions/sectionStyle" }
+      }
+    },
+
+    "sectionStyle": {
+      "type": "object",
+      "properties": {
+        "divider": { "type": "boolean" },
+        "spaceBefore": { "type": "number" },
+        "uppercase": { "type": "boolean" },
+        "metaSep": { "type": "string", "description": "Per-section override for the title/meta separator." },
+        "colors": { "$ref": "#/definitions/colors" }
+      }
+    },
+
+    "colors": {
+      "type": "object",
+      "properties": {
+        "headline": { "$ref": "#/definitions/color" },
+        "subheadline": { "$ref": "#/definitions/color" },
+        "body": { "$ref": "#/definitions/color" },
+        "link": { "$ref": "#/definitions/color" },
+        "border": { "$ref": "#/definitions/color" }
+      }
+    },
+
+    "color": {
+      "type": "string",
+      "pattern": "^#?[0-9a-fA-F]{6}$"
+    },
+
+    "typography": {
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "#/definitions/typographyElement" },
+        "subtitle": { "$ref": "#/definitions/typographyElement" },
+        "contact": { "$ref": "#/definitions/typographyElement" },
+        "heading": { "$ref": "#/definitions/typographyElement" },
+        "roleTitle": { "$ref": "#/definitions/typographyElement" },
+        "company": { "$ref": "#/definitions/typographyElement" },
+        "date": { "$ref": "#/definitions/typographyElement" },
+        "stackLabel": { "$ref": "#/definitions/typographyElement" },
+        "stackValue": { "$ref": "#/definitions/typographyElement" },
+        "body": { "$ref": "#/definitions/typographyElement" },
+        "skillsKey": { "$ref": "#/definitions/typographyElement" },
+        "skillsValue": { "$ref": "#/definitions/typographyElement" }
+      }
+    },
+
+    "typographyElement": {
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "number",
+          "minimum": 4
+        },
+        "minSize": {
+          "type": "number",
+          "minimum": 4
+        },
+        "scaleStep": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 2
+        }
+      }
+    }
+  }
+}
